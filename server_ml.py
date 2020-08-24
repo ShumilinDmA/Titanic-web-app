@@ -9,7 +9,7 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-
+# Preprocessing data like in prepering data to modeling
 def pclass_preprocessing(p_class):
     dict_pclass = {'Upper Class':0, 'Middle Class':1, 'Lower Class':2}
     choosen_indx= dict_pclass[p_class]
@@ -91,6 +91,7 @@ def title_preprocessing(title_text):
     return title
 
 
+# Stack all arrays together into one arrray for neural network
 def preprocessing_all_data(p_class, sex, age_num, family_num, family_surv, fare_num, title_text):
     pclass = pclass_preprocessing(p_class)
     sex = sex_preprocessing(sex)
@@ -104,11 +105,15 @@ def preprocessing_all_data(p_class, sex, age_num, family_num, family_surv, fare_
     return result
 
 
+#load our base model
 model = tf.keras.models.load_model('basemodel.hdf5')
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        
+        # Retrieve information from POST request
         p_class = request.form.get('p_class')
         sex = request.form.get('sex')
         age_num = int(request.form.get('age_num'))
@@ -116,9 +121,14 @@ def index():
         family_surv= request.form.get('family_surv')
         fare_num = float(request.form.get('fare_num'))
         title_text = request.form.get('title_text')
+        
+        # preprocessing data
         result = preprocessing_all_data(p_class, sex, age_num, family_num, family_surv, fare_num, title_text)
+        
+        #Make predict
         predictions = model.predict(result)
         
+        #Return in streamlit
         return json.dumps({'prediction':predictions.tolist()})
     
     return 'Welcome to the ml server'
